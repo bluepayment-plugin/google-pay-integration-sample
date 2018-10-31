@@ -1,0 +1,1 @@
+Przykład integracji Google Pay z bramką [Blue Media](https://bluemedia.pl) metodą przedtransakcji.
