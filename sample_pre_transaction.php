@@ -2,7 +2,7 @@
 /**
  * @author Blue Media S.A.
  * @copyright Blue Media S.A.
- * @version 1.0.1
+ * @version 1.0.2
  */
 
 /*
@@ -47,7 +47,7 @@ $googlePayGateway = 'bluemedia';
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
     <meta charset="utf-8">
     <title>Przykład integracji z Google Pay</title>
@@ -113,11 +113,16 @@ if ('POST' === $_SERVER['REQUEST_METHOD']) {
             // Wspierane typu autentykacji transakcji kartowej. Wartość TOKENIZED_CARD nie jest wspierana przez Blue Media.
             ['CARD'/*, 'TOKENIZED_CARD'*/],
         );
+        // Odkomentuj poniższą linię, jeżeli chcesz, aby adres użytkownika był również zwracany z Google Pay API.
+        //gp.setRequireShippingAddress(true);
         gp.setTransactionAmount(<?php echo $bmTransactionAmount; ?>);
         gp.setTransactionCurrency('PLN');
         gp.setTransactionStatus('FINAL');
-        gp.init(function (paymentData) {
-            document.getElementById('js-payment-token').value = JSON.stringify(paymentData.paymentMethodToken);
+        gp.init(function (data) {
+            // Jeżeli ustawiłeś, aby adres użytkownika był również zwracany z Google Pay API będzie on dostępny jako obiekt pod kluczem shippingAddress.
+            //console.log(data.shippingAddress);
+
+            document.getElementById('js-payment-token').value = JSON.stringify(data.paymentMethodToken);
             document.getElementById('form').submit();
         });
     </script>

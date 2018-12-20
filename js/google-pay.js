@@ -1,7 +1,7 @@
 /**
  * @author Blue Media S.A.
  * @copyright Blue Media S.A.
- * @version 1.0.1
+ * @version 1.0.2
  * @preserve
  */
 
@@ -28,6 +28,7 @@ function GooglePay(
     this.gatewayMerchantId = gatewayMerchantId;
     this.supportedCardAuthMethods = supportedCardAuthMethods;
     this.supportedCardNetworks = supportedCardNetworks;
+    this.requireShippingAddress = false;
 
     this.client = null;
     this.transactionAmount = 0;
@@ -75,6 +76,7 @@ GooglePay.prototype._getRequestData = function () {
                 'gatewayMerchantId': this.gatewayMerchantId
             }
         },
+        shippingAddressRequired: this.requireShippingAddress,
         transactionInfo: this._getRequestTransactionData()
     }
 };
@@ -113,8 +115,8 @@ GooglePay.prototype._initApiClient = function () {
  */
 GooglePay.prototype._onPayButtonClickCallback = function (onPaidCallback) {
     this.client.loadPaymentData(this._getRequestData())
-        .then(function (paymentData) {
-            onPaidCallback(paymentData);
+        .then(function (data) {
+            onPaidCallback(data);
         })
         .catch(function (errorMessage) {
             this.onErrorCallback(errorMessage);
@@ -165,6 +167,15 @@ GooglePay.prototype.init = function (onPaidCallback) {
  */
 GooglePay.prototype.onErrorCallback = function (errorMessage) {
     console.error(errorMessage);
+};
+
+/**
+ * Ustawia, czy adres użytkownika ma być zwracany z Google Pay API.
+ *
+ * @param {boolean} requireShippingAddress
+ */
+GooglePay.prototype.setRequireShippingAddress = function (requireShippingAddress) {
+    this.requireShippingAddress = requireShippingAddress;
 };
 
 /**
