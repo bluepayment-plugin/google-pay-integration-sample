@@ -7,7 +7,7 @@
 
 /*
  * Konfiguracja parametrów Blue Media.
- * Jeżeli nie posiadasz jeszcze konta w Płatnościach online Blue Media wejdź na stronę https://platnosci.bm.pl/#skontaktuj-sie
+ * Jeżeli nie posiadasz jeszcze konta w Płatnościach online Blue Media wejdź na stronę https://platnosci.bm.pl
  * i postępuj zgodnie z instrukcjami.
  *
  * Uwaga! Poniższa konfiguracja dotyczy środowiska testowego, nie produkcyjnego!
