@@ -110,8 +110,7 @@ if ('POST' === $_SERVER['REQUEST_METHOD']) {
             '<?php echo $bmAcceptorId; ?>',
             // Wspierani dostawcy kartowi. Wartości: AMEX, DISCOVER, JCB nie są wspierane przez Blue Media.
             [/*'AMEX', 'DISCOVER', 'JCB', */'MASTERCARD', 'VISA'],
-            // Wspierane typy autentykacji transakcji kartowej. Wartość TOKENIZED_CARD nie jest wspierana przez Blue Media.
-            ['CARD'/*, 'TOKENIZED_CARD'*/],
+            ['CARD', 'TOKENIZED_CARD'],
         );
         // Odkomentuj poniższą linię, jeżeli chcesz, aby adres użytkownika był również zwracany z Google Pay API.
         //gp.setRequireShippingAddress(true);
