@@ -13,7 +13,7 @@
  * Uwaga! Poniższa konfiguracja dotyczy środowiska testowego, nie produkcyjnego!
  */
 
-// Link do bramki, na które wysyłane są parametry do rozpoczęcia transakcji.
+// Link do bramki, na który wysyłane są parametry do rozpoczęcia transakcji.
 $bmGatewayUrl = 'https://pay-accept.bm.pl/payment';
 
 // Identyfikator akceptanta.
@@ -110,7 +110,7 @@ if ('POST' === $_SERVER['REQUEST_METHOD']) {
             '<?php echo $bmAcceptorId; ?>',
             // Wspierani dostawcy kartowi. Wartości: AMEX, DISCOVER, JCB nie są wspierane przez Blue Media.
             [/*'AMEX', 'DISCOVER', 'JCB', */'MASTERCARD', 'VISA'],
-            // Wspierane typu autentykacji transakcji kartowej. Wartość TOKENIZED_CARD nie jest wspierana przez Blue Media.
+            // Wspierane typy autentykacji transakcji kartowej. Wartość TOKENIZED_CARD nie jest wspierana przez Blue Media.
             ['CARD'/*, 'TOKENIZED_CARD'*/],
         );
         // Odkomentuj poniższą linię, jeżeli chcesz, aby adres użytkownika był również zwracany z Google Pay API.
