@@ -2,7 +2,7 @@
 /**
  * @author Blue Media S.A.
  * @copyright Blue Media S.A.
- * @version 1.0.2
+ * @version 1.0.3
  */
 
 /*
