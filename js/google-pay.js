@@ -114,12 +114,14 @@ GooglePay.prototype._initApiClient = function () {
  * @param {function} onPaidCallback
  */
 GooglePay.prototype._onPayButtonClickCallback = function (onPaidCallback) {
-    this.client.loadPaymentData(this._getRequestData())
+    const self = this;
+
+    self.client.loadPaymentData(self._getRequestData())
         .then(function (data) {
             onPaidCallback(data);
         })
         .catch(function (errorMessage) {
-            this.onErrorCallback(errorMessage);
+            self.onErrorCallback(errorMessage);
         });
 };
 
