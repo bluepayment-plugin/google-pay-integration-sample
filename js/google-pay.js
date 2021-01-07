@@ -8,23 +8,29 @@
 /**
  * @constructor
  * @param {string} environment
+ * @param {string} authToken
  * @param {string} merchantId
- * @param {string} gatewayId
+ * @param {string} merchantDomain
+ * @param {string} merchantName
  * @param {string} gatewayMerchantId
  * @param {array} supportedCardNetworks
  * @param {array} supportedCardAuthMethods
  */
 function GooglePay(
     environment,
+    authToken,
     merchantId,
-    gatewayId,
+    merchantDomain,
+    merchantName,
     gatewayMerchantId,
     supportedCardNetworks,
     supportedCardAuthMethods
 ) {
     this.environment = environment;
+    this.authToken = authToken;
     this.merchantId = merchantId;
-    this.gatewayId = gatewayId;
+    this.merchantDomain = merchantDomain;
+    this.merchantName = merchantName;
     this.gatewayMerchantId = gatewayMerchantId;
     this.supportedCardAuthMethods = supportedCardAuthMethods;
     this.supportedCardNetworks = supportedCardNetworks;
@@ -32,7 +38,8 @@ function GooglePay(
 
     this.client = null;
     this.transactionAmount = 0;
-    this.transactionCurrency = '';
+    this.transactionCurrencyCode = '';
+    this.transactionCountryCode = '';
     this.transactionStatus = '';
 
     this.payButtonContainerId = 'js-pay-button-wrapper';
@@ -62,37 +69,56 @@ GooglePay.prototype._createPayButton = function (onPaidCallback) {
  * @private
  * @returns {object} {@link https://developers.google.com/pay/api/web/reference/object#PaymentDataRequest}
  */
-GooglePay.prototype._getRequestData = function () {
+GooglePay.prototype._getPaymentDataRequestData = function () {
     return {
-        allowedPaymentMethods: this.supportedCardAuthMethods,
-        cardRequirements: {
-            allowedCardNetworks: this.supportedCardNetworks
+        apiVersion: 2,
+        apiVersionMinor: 0,
+        merchantInfo: {
+            merchantId: this.merchantId,
+            merchantOrigin: this.merchantDomain,
+            merchantName: this.merchantName,
+            authJwt: this.authToken
         },
-        merchantId: this.merchantId,
-        paymentMethodTokenizationParameters: {
-            tokenizationType: 'PAYMENT_GATEWAY',
-            parameters: {
-                'gateway': this.gatewayId,
-                'gatewayMerchantId': this.gatewayMerchantId
+        allowedPaymentMethods: [
+            {
+                type: 'CARD',
+                parameters: {
+                    allowedAuthMethods: this.supportedCardAuthMethods,
+                    allowedCardNetworks: this.supportedCardNetworks
+                },
+                tokenizationSpecification: {
+                    type: 'PAYMENT_GATEWAY',
+                    parameters: {
+                        gateway: 'bluemedia',
+                        gatewayMerchantId: this.gatewayMerchantId
+                    }
+                }
             }
+        ],
+        transactionInfo: {
+            currencyCode: this.transactionCurrencyCode,
+            countryCode: this.transactionCountryCode,
+            totalPriceStatus: this.transactionStatus,
+            totalPrice: this.transactionAmount
         },
         shippingAddressRequired: this.requireShippingAddress,
-        transactionInfo: this._getRequestTransactionData()
-    }
+    };
 };
 
 /**
- * Zwraca dane transakcji do zapytania o płatność.
+ * Zwraca dane do zapytania o sprawdzenie możliwości płacenia za pomocą Google Pay.
  *
  * @private
- * @returns {object} {@link https://developers.google.com/pay/api/web/reference/object#PaymentDataRequest}
+ * @returns {object} {@link https://developers.google.com/pay/api/web/reference/request-objects#IsReadyToPayRequest}
  */
-GooglePay.prototype._getRequestTransactionData = function () {
-    return {
-        currencyCode: this.transactionCurrency,
-        totalPrice: this.transactionAmount,
-        totalPriceStatus: this.transactionStatus,
-    };
+GooglePay.prototype._getIsReadyToPayRequestData = function () {
+    const requestData = this._getPaymentDataRequestData();
+
+    delete requestData.merchantInfo;
+    delete requestData.transactionInfo;
+    delete requestData.shippingAddressRequired;
+
+    return requestData;
 };
 
 /**
@@ -116,7 +142,7 @@ GooglePay.prototype._initApiClient = function () {
 GooglePay.prototype._onPayButtonClickCallback = function (onPaidCallback) {
     const self = this;
 
-    self.client.loadPaymentData(self._getRequestData())
+    self.client.loadPaymentData(self._getPaymentDataRequestData())
         .then(function (data) {
             onPaidCallback(data);
         })
@@ -132,9 +158,7 @@ GooglePay.prototype._onPayButtonClickCallback = function (onPaidCallback) {
  * @see {@link https://developers.google.com/pay/api/web/reference/client#prefetchPaymentData}
  */
 GooglePay.prototype._prefetchTransactionData = function () {
-    this.client.prefetchPaymentData({
-        transactionInfo: this._getRequestTransactionData()
-    });
+    this.client.prefetchPaymentData(this._getPaymentDataRequestData());
 };
 
 /**
@@ -148,7 +172,7 @@ GooglePay.prototype.init = function (onPaidCallback) {
 
     self._initApiClient();
 
-    self.client.isReadyToPay({allowedPaymentMethods: self.supportedCardAuthMethods})
+    self.client.isReadyToPay(self._getIsReadyToPayRequestData())
         .then(function (response) {
             if (response.result) {
                 self._createPayButton(onPaidCallback);
@@ -175,6 +199,7 @@ GooglePay.prototype.onErrorCallback = function (errorMessage) {
  * Ustawia, czy adres użytkownika ma być zwracany z Google Pay API.
  *
  * @param {boolean} requireShippingAddress
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#PaymentDataRequest}
  */
 GooglePay.prototype.setRequireShippingAddress = function (requireShippingAddress) {
     this.requireShippingAddress = requireShippingAddress;
@@ -184,6 +209,7 @@ GooglePay.prototype.setRequireShippingAddress = function (requireShippingAddress
  * Ustawia kwotę transakcji.
  *
  * @param {numeric} amount
+ * @see {@link https://developers.google.com/pay/api/web/reference/object#TransactionInfo}
  */
 GooglePay.prototype.setTransactionAmount = function (amount) {
     this.transactionAmount = amount;
@@ -192,10 +218,21 @@ GooglePay.prototype.setTransactionAmount = function (amount) {
 /**
  * Ustawia walutę transakcji.
  *
- * @param {string} currency
+ * @param {string} code
+ * @see {@link https://developers.google.com/pay/api/web/reference/object#TransactionInfo}
  */
-GooglePay.prototype.setTransactionCurrency = function (currency) {
-    this.transactionCurrency = currency;
+GooglePay.prototype.setTransactionCurrencyCode = function (code) {
+    this.transactionCurrencyCode = code;
+};
+
+/**
+ * Ustawia kraj transakcji.
+ *
+ * @param {string} code
+ * @see {@link https://developers.google.com/pay/api/web/reference/object#TransactionInfo}
+ */
+GooglePay.prototype.setTransactionCountryCode = function (code) {
+    this.transactionCountryCode = code;
 };
 
 /**
